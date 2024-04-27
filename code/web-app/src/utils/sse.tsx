@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import config from '../config';
 
-function EventComponent() {
-  const [serverTime, setServerTime] = useState("");
+export const useSSE = () => {
+  const [event, setEvent] = useState();
 
   useEffect(() => {
     const eventSource = new EventSource(config.apiBaseUrl + "/chat_stream");
 
-    eventSource.onmessage = function (event) {
-      setServerTime(event.data);
+    eventSource.onmessage = function (event: any) {
+      setEvent(event);
     };
 
     eventSource.onerror = function (err) {
@@ -21,11 +21,5 @@ function EventComponent() {
     };
   }, []);
 
-  return (
-    <div>
-      <h1>Server event: {serverTime}</h1>
-    </div>
-  );
+  return { event }
 }
-
-export default EventComponent;

@@ -1,38 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { useQuery, useMutation } from '@apollo/client';
-import { GET_PRODUCTS, ADD_PRODUCT, REMOVE_PRODUCT, PRODUCT_ADDED_SUBSCRIPTION } from '../graphql/operations';
-import EventComponent from '../utils/sse';
+import { useSSE } from '../utils/sse';
 
-interface Product {
-  id: string;
-  name: string;
-}
+const Products = () => {
+  const { event } = useSSE()
 
-const Products: React.FC = () => {
   const [newProductText, setNewProductText] = useState('');
-  const [pushToKafka, setPushToKafka] = useState(false);
-  const [addProduct] = useMutation(ADD_PRODUCT);
-  const [removeProduct] = useMutation(REMOVE_PRODUCT);
 
   const handleCall = async () => {
-    if (!newProductText.trim()) return;
-    if (pushToKafka) {
-      const response = await fetch('/api/post', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name: newProductText }),
-      });
-      if (response.ok) {
-        setNewProductText('');
-      } else {
-        const errorText = await response.text();
-        console.error('Failed to add product:', errorText);
-      }
-    } else {
-      await addProduct({ variables: { name: newProductText } });
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url: "https://molmet.ki.se/",
+        query: "test"
+      }),
+    });
+    if (response.ok) {
       setNewProductText('');
+    } else {
+      const errorText = await response.text();
+      console.error('Failed to add product:', errorText);
     }
   };
 
@@ -60,7 +49,9 @@ const Products: React.FC = () => {
               </button>
             </div>
           </div>
-          <EventComponent />
+          <div>
+            event: {event}
+          </div>
         </div>
       </div>
     </div>
