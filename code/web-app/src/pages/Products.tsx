@@ -1,29 +1,36 @@
-import { useState } from 'react';
-import { useSSE } from '../utils/sse';
+import { useEffect, useState } from 'react';
+import { useEventSource } from '../utils/sse';
 
 const Products = () => {
-  // const { event } = useSSE()
 
-  const [newProductText, setNewProductText] = useState('');
+  const [url, setUrl] = useState("https://molmet.ki.se/");
+  const [query, setQuery] = useState("is dima a father?");
+  const [eventData, setEventData] = useState('');
+
+  useEffect(() => {
+    return () => {
+      if (eventSource) {
+        eventSource.close();
+      }
+    };
+  }, []);
+
+  let eventSource: EventSource | null = null;
 
   const handleCall = async () => {
-    const response = await fetch('/api/chat_stream', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        url: "https://molmet.ki.se/",
-        query: "is dima a father?"
-      }),
-    });
-    if (response.ok) {
-      setNewProductText('');
-    } else {
-      const errorText = await response.text();
-      console.error('Failed to add product:', errorText);
-    }
+    eventSource = new EventSource(`/api/chat_stream?url=${url}&query=${query}`);
+
+    eventSource.onmessage = (event) => {
+      console.log('New event:', event.data);
+      setEventData(eventData => eventData + '\n' + event.data);
+    };
+
+    eventSource.onerror = (error) => {
+      console.error('EventSource failed:', error);
+      eventSource?.close();
+    };
   };
+
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -41,17 +48,24 @@ const Products = () => {
                 type="url"
                 placeholder="URL"
                 className="join-item flex-grow input input-bordered input-md input-primary"
-                value={newProductText}
-                onChange={(e) => setNewProductText(e.target.value)}
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+              />
+              <input
+                type="text"
+                placeholder="Query"
+                className="join-item flex-grow input input-bordered input-md input-primary"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
               />
               <button className="join-item btn btn-square btn-md btn-primary" onClick={handleCall}>
                 Go
               </button>
             </div>
           </div>
-          <div>
-            event: {event}
-          </div>
+          <pre>
+            {/* data: {data} */}
+          </pre>
         </div>
       </div>
     </div>
