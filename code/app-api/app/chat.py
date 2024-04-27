@@ -29,7 +29,7 @@ def token_iterator(response: Iterator[StreamedChatResponse]) -> Iterator[str]:
             break
 
 # Define the /api/chat endpoint
-@router.get("/api/chat")
+@router.post("/api/chat")
 async def chat(chat_request: ChatRequest):
     # Execute the search using Cohere
     try:
@@ -44,14 +44,13 @@ async def chat(chat_request: ChatRequest):
     return {"message": response.text}
 
 # Define the /api/chat endpoint
-@router.get("/api/chat_stream")
+@router.post("/api/chat_stream")
 async def chat_stream(chat_request: ChatRequest) -> StreamingResponse:
     # Execute the search using Cohere
     try:
         response = co.chat_stream(
             message=chat_request.query,
             connectors=[{"id": "web-search", "options": {"site": chat_request.url}}],
-            chat_stream=True
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
