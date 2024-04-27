@@ -15,7 +15,7 @@ const Products: React.FC = () => {
   const [newProductText, setNewProductText] = useState('');
   const [pushToKafka, setPushToKafka] = useState(false);
   const { data, loading, error, subscribeToMore } = useQuery(GET_PRODUCTS);
-  const [addProduct] = useMutation(a);
+  const [addProduct] = useMutation(ADD_PRODUCT);
   const [removeProduct] = useMutation(REMOVE_PRODUCT);
 
   useEffect(() => {
