@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
 import { GET_PRODUCTS, ADD_PRODUCT, REMOVE_PRODUCT, PRODUCT_ADDED_SUBSCRIPTION } from '../graphql/operations';
+import EventComponent from '../utils/sse';
 
 interface Product {
   id: string;
@@ -10,42 +11,13 @@ interface Product {
 const Products: React.FC = () => {
   const [newProductText, setNewProductText] = useState('');
   const [pushToKafka, setPushToKafka] = useState(false);
-  const { data, loading, error, subscribeToMore } = useQuery(GET_PRODUCTS);
   const [addProduct] = useMutation(ADD_PRODUCT);
   const [removeProduct] = useMutation(REMOVE_PRODUCT);
 
-  useEffect(() => {
-    subscribeToMore({
-      document: PRODUCT_ADDED_SUBSCRIPTION,
-      updateQuery: (prev, { subscriptionData }) => {
-        if (!subscriptionData.data) return prev;
-        const newProduct = subscriptionData.data.productAdded;
-
-        if (prev.products.some((product: Product) => product.id === newProduct.id)) {
-          return prev;
-        }
-
-        return Object.assign({}, prev, {
-          products: [...prev.products, newProduct]
-        });
-      },
-    });
-  }, [subscribeToMore]);
-
-  if (loading) return (
-    <div className="flex justify-center items-center min-h-screen bg-base-300">
-      <button className="btn">
-        <span className="loading loading-spinner"></span>
-        Loading...
-      </button>
-    </div>
-  );
-  if (error) return <p>{'Error: ' + error}</p>;
-
-  const handleAddProduct = async () => {
+  const handleCall = async () => {
     if (!newProductText.trim()) return;
     if (pushToKafka) {
-      const response = await fetch('/input/add_product', {
+      const response = await fetch('/api/post', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -83,11 +55,12 @@ const Products: React.FC = () => {
                 value={newProductText}
                 onChange={(e) => setNewProductText(e.target.value)}
               />
-              <button className="join-item btn btn-square btn-md btn-primary" onClick={handleAddProduct}>
+              <button className="join-item btn btn-square btn-md btn-primary" onClick={handleCall}>
                 Go
               </button>
             </div>
           </div>
+          <EventComponent />
         </div>
       </div>
     </div>
