@@ -1,48 +1,72 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
-/**
- * Custom hook for managing an EventSource connection.
- * @param url URL to connect to.
- * @param isEnabled Boolean to enable or disable the event source.
- * @returns An object containing the event data and a function to clear the event data.
- */
-export const useEventSource = (url: string, isEnabled: boolean) => {
-  const [data, setData] = useState('');
-  const [eventSource, setEventSource] = useState<EventSource | null>(null);
+export const useManualServerSentEvents = (url: string, body: any, headers?: HeadersInit) => {
+  const [messages, setMessages] = useState<string[]>([]);
+  const [controller, setController] = useState<AbortController | null>(null);
 
-  const clearData = useCallback(() => {
-    setData('');
-  }, []);
+  const startFetching = useCallback(() => {
+    const newController = new AbortController();
+    setController(newController);
+    const signal = newController.signal;
 
-  useEffect(() => {
-    if (!isEnabled) {
-      if (eventSource) {
-        eventSource.close();
-        setEventSource(null);
+    const fetchData = async () => {
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...headers,
+          },
+          body: JSON.stringify(body),
+          signal,
+        });
+
+        if (response.body) {
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+              break;
+            }
+            const str = decoder.decode(value);
+            console.log("Message:", str);
+            try {
+              setMessages((prevMessages) => [...prevMessages, str]);
+            } catch (error) {
+              console.error("Error parsing message:", error);
+            }
+          }
+        }
+      } catch (error: any) {
+        if (error.name === 'AbortError') {
+          // Fetch was aborted
+          console.log('Fetch aborted');
+        } else {
+          console.error("Fetch error:", error);
+        }
       }
-      return;
+    };
+
+    fetchData();
+  }, [url, body, headers]);
+
+  const stopFetching = useCallback(() => {
+    if (controller) {
+      controller.abort();
+      setController(null);
     }
+  }, [controller]);
 
-    const es = new EventSource(url);
-
-    es.onmessage = (event) => {
-      setData(currentData => currentData + '\n' + event.data);
-    };
-
-    es.onerror = (error) => {
-      console.error('EventSource error:', error);
-      es.close();
-    };
-
-    setEventSource(es);
-
+  // Cleanup on component unmount
+  useEffect(() => {
     return () => {
-      if (es) {
-        es.close();
+      if (controller) {
+        controller.abort();
       }
     };
-  }, [url, isEnabled, eventSource]);
+  }, [controller]);
 
-  return { data, clearData };
+  return { messages, startFetching, stopFetching };
 };
-

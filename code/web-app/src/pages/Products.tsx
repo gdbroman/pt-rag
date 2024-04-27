@@ -1,36 +1,22 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useManualServerSentEvents } from '../utils/sse';
 
 const Products = () => {
   const [url, setUrl] = useState("https://molmet.ki.se/");
   const [query, setQuery] = useState("what's the topic of the research?");
-  const [eventData, setEventData] = useState('');
-  const [eventSource, setEventSource] = useState<EventSource | null>(null);
 
-
-  useEffect(() => {
-    return () => {
-      if (eventSource) {
-        eventSource.close();
-      }
-    };
-  }, [eventSource]);
+  const {
+    messages,
+    startFetching,
+    stopFetching
+  } = useManualServerSentEvents(`/api/chat_stream?url=${url}&query=${query}`, { url, query }, {
+    'Accept': 'text/event-stream',
+  });
 
 
   const handleCall = useCallback(async () => {
-    const newEventSource = new EventSource(`/api/chat_stream?url=${url}&query=${query}`);
-    setEventSource(newEventSource);
-
-    newEventSource.onmessage = (event) => {
-      console.log('New event:', event.data);
-      console.log("eventData", eventData);
-      setEventData(eventData => eventData + '\n' + event.data);
-    };
-
-    newEventSource.onerror = (error) => {
-      console.error('EventSource failed:', error);
-      newEventSource.close();
-    };
-  }, [eventData, query, url])
+    startFetching();
+  }, [startFetching])
 
 
   return (
@@ -44,7 +30,20 @@ const Products = () => {
       <div className="flex flex-grow justify-center items-center bg-neutral">
         <div className="card card-compact w-full max-w-lg bg-base-100 shadow-xl">
           <div className="card-body items-stretch text-center">
-            <div className="form-control w-full">
+            <div className="card-body items-stretch text-center">
+              <div className="join-item flex flex-col items-start"
+                style={{
+                  textAlign: 'left',
+                  fontSize: '20px',
+                  color: 'white',
+                }}
+              >
+                {messages.map((message) => message)}
+              </div>
+            </div>
+            <div className="form-control w-full" style={{
+              gap: 4
+            }}>
               <input
                 type="url"
                 placeholder="URL"
@@ -59,14 +58,17 @@ const Products = () => {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
-              <button className="join-item btn btn-square btn-md btn-primary" onClick={handleCall}>
-                Go
-              </button>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+              }}>
+                <button className="join-item btn btn-square btn-md btn-primary" onClick={handleCall}>
+                  Go
+                </button>
+              </div>
             </div>
           </div>
-          <pre>
-            data: {eventData}
-          </pre>
+
         </div>
       </div>
     </div>

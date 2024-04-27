@@ -44,8 +44,8 @@ async def chat(chat_request: ChatRequest):
     return {"message": response.text}
 
 # Define the /api/chat endpoint
-@router.get("/api/chat_stream")
-async def chat_stream(chat_request: ChatRequest = Depends()) -> StreamingResponse:
+@router.post("/api/chat_stream")
+async def chat_stream(chat_request: ChatRequest) -> StreamingResponse:
     # Execute the search using Cohere
     try:
         response = co.chat_stream(
