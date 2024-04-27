@@ -1,20 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useSSE } from '../utils/sse';
 
 const Products = () => {
-  const { event } = useSSE()
+  // const { event } = useSSE()
 
   const [newProductText, setNewProductText] = useState('');
 
   const handleCall = async () => {
-    const response = await fetch('/api/chat', {
+    const response = await fetch('/api/chat_stream', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         url: "https://molmet.ki.se/",
-        query: "test"
+        query: "is dima a father?"
       }),
     });
     if (response.ok) {
