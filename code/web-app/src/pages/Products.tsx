@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
-import { useEventSource } from '../utils/sse';
+import { useCallback, useEffect, useState } from 'react';
 
 const Products = () => {
-
   const [url, setUrl] = useState("https://molmet.ki.se/");
-  const [query, setQuery] = useState("is dima a father?");
+  const [query, setQuery] = useState("what's the topic of the research?");
   const [eventData, setEventData] = useState('');
+  const [eventSource, setEventSource] = useState<EventSource | null>(null);
+
 
   useEffect(() => {
     return () => {
@@ -13,23 +13,24 @@ const Products = () => {
         eventSource.close();
       }
     };
-  }, []);
+  }, [eventSource]);
 
-  let eventSource: EventSource | null = null;
 
-  const handleCall = async () => {
-    eventSource = new EventSource(`/api/chat_stream?url=${url}&query=${query}`);
+  const handleCall = useCallback(async () => {
+    const newEventSource = new EventSource(`/api/chat_stream?url=${url}&query=${query}`);
+    setEventSource(newEventSource);
 
-    eventSource.onmessage = (event) => {
+    newEventSource.onmessage = (event) => {
       console.log('New event:', event.data);
+      console.log("eventData", eventData);
       setEventData(eventData => eventData + '\n' + event.data);
     };
 
-    eventSource.onerror = (error) => {
+    newEventSource.onerror = (error) => {
       console.error('EventSource failed:', error);
-      eventSource?.close();
+      newEventSource.close();
     };
-  };
+  }, [eventData, query, url])
 
 
   return (
@@ -64,7 +65,7 @@ const Products = () => {
             </div>
           </div>
           <pre>
-            {/* data: {data} */}
+            data: {eventData}
           </pre>
         </div>
       </div>

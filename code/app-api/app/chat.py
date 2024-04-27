@@ -55,4 +55,4 @@ async def chat_stream(chat_request: ChatRequest = Depends()) -> StreamingRespons
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-    return StreamingResponse(token_iterator(response), media_type="text/plain")
+    return StreamingResponse(token_iterator(response), media_type="text/event-stream")
