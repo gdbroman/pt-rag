@@ -8,15 +8,7 @@ interface AuthenticatedProps {
 
 const Authenticated: React.FC<AuthenticatedProps> = ({ userInfo, logout }) => {
     return (
-        <>
-            <p>
-                Authenticated as: {JSON.stringify(userInfo)}
-            </p>
-            <button onClick={logout}>
-                Logout
-            </button>
-            <Products />
-        </>
+        <Products />
     )
 }
 

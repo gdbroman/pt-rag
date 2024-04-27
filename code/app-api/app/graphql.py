@@ -63,8 +63,8 @@ class Query:
         return db.list_products()
 
     @strawberry.field(permission_classes=[IsAuthenticated])
-    def hello(self) -> Message:
-        return Message(message="Hej, hej")
+    def search(self) -> Message:
+        return Message(message="The retrieved content goes here")
 
 #### Subscriptions ####
 
