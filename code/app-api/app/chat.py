@@ -51,7 +51,6 @@ async def chat_stream(chat_request: ChatRequest) -> StreamingResponse:
         response = co.chat_stream(
             message=chat_request.query,
             connectors=[{"id": "web-search", "options": {"site": chat_request.url}}],
-            chat_stream=True
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
